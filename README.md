@@ -4,11 +4,11 @@ A comprehensive network traffic anomaly detection system that uses machine learn
 
 ## Features
 
-- **Automated Authentication**: Simple username/password login - no API key management needed
+
 - **Real-time Monitoring**: Continuously monitors directories for new CSV files
-- **Machine Learning Detection**: Uses trained models to detect various types of network anomalies
+- **Machine Learning Detection**: Uses XGBoost and random forest to detect various types of network anomalies
 - **Web Dashboard**: User-friendly interface for viewing results and managing workspaces
-- **Session Management**: Remembers your settings for 24 hours
+
 - **Flexible Configuration**: Customizable monitoring intervals and directories
 
 ## Quick Start
@@ -104,7 +104,9 @@ python network_monitor.py --csv-dir "C:\custom\path"
 
 ### Input Requirements
 - **CSV files**: Place CSV files in the monitored directory
-- **CICFlowMeter format**: Files must be generated using CICFlowMeter
+- **CICFlowMeter format**: Files must be generated using CICFlowMeter, or if you want to use another tool see this: If you are an engineer and prefer to use another network analysis tool, ensure your CSV files contain exactly these 78 features in the correct order:
+
+Destination Port, Flow Duration, Total Fwd Packets, Total Backward Packets, Total Length of Fwd Packets, Total Length of Bwd Packets, Fwd Packet Length Max, Fwd Packet Length Min, Fwd Packet Length Mean, Fwd Packet Length Std, Bwd Packet Length Max, Bwd Packet Length Min, Bwd Packet Length Mean, Bwd Packet Length Std, Flow Bytes/s, Flow Packets/s, Flow IAT Mean, Flow IAT Std, Flow IAT Max, Flow IAT Min, Fwd IAT Total, Fwd IAT Mean, Fwd IAT Std, Fwd IAT Max, Fwd IAT Min, Bwd IAT Total, Bwd IAT Mean, Bwd IAT Std, Bwd IAT Max, Bwd IAT Min, Fwd PSH Flags, Bwd PSH Flags, Fwd URG Flags, Bwd URG Flags, Fwd Header Length, Bwd Header Length, Fwd Packets/s, Bwd Packets/s, Min Packet Length, Max Packet Length, Packet Length Mean, Packet Length Std, Packet Length Variance, FIN Flag Count, SYN Flag Count, RST Flag Count, PSH Flag Count, ACK Flag Count, URG Flag Count, CWE Flag Count, ECE Flag Count, Down/Up Ratio, Average Packet Size, Avg Fwd Segment Size, Avg Bwd Segment Size, Fwd Header Length.1, Fwd Avg Bytes/Bulk, Fwd Avg Packets/Bulk, Fwd Avg Bulk Rate, Bwd Avg Bytes/Bulk, Bwd Avg Packets/Bulk, Bwd Avg Bulk Rate, Subflow Fwd Packets, Subflow Fwd Bytes, Subflow Bwd Packets, Subflow Bwd Bytes, Init_Win_bytes_forward, Init_Win_bytes_backward, act_data_pkt_fwd, min_seg_size_forward, Active Mean, Active Std, Active Max, Active Min, Idle Mean, Idle Std, Idle Max, Idle Min
 - **Automatic processing**: Files are processed automatically when detected
 
 ### Output Directories
@@ -120,6 +122,7 @@ The system can detect:
 - **PortScan** - Port scanning activities
 - **Brute Force** - Brute force attacks
 - **Bot** - Automated/bot traffic
+- **Web Attack** - Web-based attacks
 - **BENIGN** - Normal traffic
 
 ## Web Interface
@@ -151,7 +154,6 @@ monitor_directory/
 ## Troubleshooting
 
 ### Authentication Issues
-- Ensure the API server is running on `http://localhost:8000`
 - Verify your username and password are correct
 - Check that you have a registered account
 
@@ -173,17 +175,6 @@ python network_monitor.py --reset-session
 
 ## Development
 
-### Project Structure
-```
-├── app/                    # Web application
-│   ├── api/               # API endpoints
-│   ├── core/              # Database and authentication
-│   ├── templates/         # HTML templates
-│   └── static/            # Static files
-├── network_monitor.py     # Main monitor script
-└── requirements.txt       # Dependencies
-```
-
 ### API Endpoints
 - `POST /api/login` - User authentication
 - `POST /api/direct-process` - Process CSV data
@@ -192,14 +183,9 @@ python network_monitor.py --reset-session
 
 ## Security
 
-- **No exposed API keys**: API keys are managed internally
-- **Session-based**: Temporary session storage (24 hours)
-- **Secure authentication**: Password hashing with bcrypt
 - **Local processing**: All data processed locally
 
 ## Requirements
 
-- Python 3.8+
-- Windows 7 or later (for executable)
-- CICFlowMeter for traffic capture
-- 100MB+ free disk space 
+- Python 3.9+
+- CICFlowMeter for traffic capture 
