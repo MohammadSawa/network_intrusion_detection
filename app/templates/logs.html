@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs - Network Anomaly Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <style>
+        .table-scrollable {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .table-scrollable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #212529;
+            z-index: 1;
+        }
+        
+        body {
+            background-color: #121212 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        .bg-dark-custom {
+            background-color: #0d1117;
+        }
+        
+        .card {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border: 1px solid #333 !important;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link {
+            color: #e0e0e0 !important;
+        }
+        
+        .card-body {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        
+        .card-title {
+            color: #e0e0e0 !important;
+        }
+        
+        .form-control, .form-select {
+            background-color: #2d2d2d !important;
+            border-color: #555 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: #2d2d2d !important;
+            border-color: #5c94ff !important;
+            color: #e0e0e0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(92, 148, 255, 0.25) !important;
+        }
+        
+        .btn-outline-secondary {
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: #555 !important;
+            color: #fff !important;
+        }
+        
+        .table {
+            color: #e0e0e0 !important;
+        }
+        
+        .table-striped > tbody > tr:nth-of-type(odd) > td {
+            background-color: #252525 !important;
+        }
+        
+        .table-hover > tbody > tr:hover > td {
+            background-color: #2d2d2d !important;
+        }
+        
+        .modal-content {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+        
+        .modal-header {
+            border-bottom-color: #333 !important;
+        }
+        
+        .modal-footer {
+            border-top-color: #333 !important;
+        }
+        
+        .pagination .page-link {
+            background-color: #2d2d2d !important;
+            border-color: #555 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        .pagination .page-link:hover {
+            background-color: #404040 !important;
+            color: #fff !important;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #5c94ff !important;
+            border-color: #5c94ff !important;
+        }
+        
+        .alert-danger {
+            background-color: #3b1e1e !important;
+            border-color: #532626 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark-custom">
+        <div class="container">
+            <a class="navbar-brand" href="/">Network Anomaly Detection</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/workspaces">
+                            <i class="fas fa-arrow-left"></i> Back to Workspaces
+                        </a>
+                    </li>
+                    <li class="nav-item" id="dashboardNavItem" style="display: none;">
+                        <a class="nav-link" href="#" id="dashboardLink">
+                            <i class="fas fa-tachometer-alt"></i> Back to Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title">Network Traffic Logs</h2>
+                        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search logs...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="filterLogs()">Search</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="predictionFilter">
+                                    <option value="all">All Predictions</option>
+                                    <option value="DoS">DoS</option>
+                                    <option value="DDoS">DDoS</option>
+                                    <option value="PortScan">Port Scan</option>
+                                    <option value="Brute Force">Brute Force</option>
+                                    <option value="Bot">Bot</option>
+                                    <option value="BENIGN">Benign</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="refreshLogs()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive table-scrollable mt-4">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Source IP</th>
+                                        <th>Destination IP</th>
+                                        <th>Protocol</th>
+                                        <th>Prediction</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p id="resultCount">Showing 0 logs</p>
+                            </div>
+                            <div class="col-md-6">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-end" id="pagination">
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logDetailModalLabel">Log Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="logDetailContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allLogs = [];
+        let currentPage = 1;
+        const logsPerPage = 100;
+        let logModal;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKey = localStorage.getItem('api_key');
+            if (!apiKey) {
+                console.error('No API key found');
+                window.location.href = '/login';
+                return;
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const workspaceId = urlParams.get('workspace_id');
+            
+            if (workspaceId) {
+                const dashboardNavItem = document.getElementById('dashboardNavItem');
+                const dashboardLink = document.getElementById('dashboardLink');
+                
+                if (dashboardNavItem && dashboardLink) {
+                    dashboardNavItem.style.display = 'block';
+                    dashboardLink.href = `/dashboard/${workspaceId}`;
+                }
+            }
+            
+            logModal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+            
+            loadLogs();
+            
+            document.getElementById('predictionFilter').addEventListener('change', filterLogs);
+        });
+
+        async function loadLogs() {
+            try {
+                const apiKey = localStorage.getItem('api_key');
+                const urlParams = new URLSearchParams(window.location.search);
+                const workspaceId = urlParams.get('workspace_id');
+                
+                if (!workspaceId) {
+                    throw new Error('Workspace ID is required');
+                }
+                
+                const response = await fetch(`/api/logs?workspace_id=${workspaceId}&limit=500`, {
+                    headers: {
+                        'X-API-Key': apiKey
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load logs');
+                }
+
+                allLogs = await response.json();
+                displayLogs(allLogs);
+                updatePagination();
+                
+                document.getElementById('resultCount').textContent = `Showing ${allLogs.length} logs`;
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('errorAlert').textContent = 'Failed to load logs. Please try again.';
+                document.getElementById('errorAlert').classList.remove('d-none');
+            }
+        }
+        
+        function displayLogs(logs) {
+            const tableBody = document.getElementById('logsTableBody');
+            tableBody.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * logsPerPage;
+            const endIndex = Math.min(startIndex + logsPerPage, logs.length);
+            
+            for (let i = startIndex; i < endIndex; i++) {
+                const log = logs[i];
+                const row = document.createElement('tr');
+                
+                let predictionClass = '';
+                let badgeClass = 'bg-success';
+                
+                if (log.status === 'DoS' || log.status === 'DDoS') {
+                    predictionClass = 'table-danger';
+                    badgeClass = 'bg-danger';
+                    row.classList.add(predictionClass);
+                } else if (log.status === 'PortScan' || log.status === 'Brute Force') {
+                    predictionClass = 'table-warning';
+                    badgeClass = 'bg-warning text-dark';
+                    row.classList.add(predictionClass);
+                } else if (log.status === 'Bot') {
+                    predictionClass = 'table-info';
+                    badgeClass = 'bg-info text-dark';
+                    row.classList.add(predictionClass);
+                } else if (log.status === 'BENIGN') {
+                    predictionClass = 'table-success';
+                    badgeClass = 'bg-success';
+                    row.classList.add(predictionClass);
+                }
+                
+                row.innerHTML = `
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${log.source_ip}</td>
+                    <td>${log.destination_ip}</td>
+                    <td>${log.protocol}</td>
+                    <td><span class="badge ${badgeClass}">${log.status}</span></td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+        
+        function updatePagination() {
+            const paginationElement = document.getElementById('pagination');
+            paginationElement.innerHTML = '';
+            
+            const totalPages = Math.ceil(allLogs.length / logsPerPage);
+            if (totalPages <= 1) return;
+            
+            let li = document.createElement('li');
+            li.classList.add('page-item');
+            if (currentPage === 1) li.classList.add('disabled');
+            li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>`;
+            paginationElement.appendChild(li);
+            
+            for (let i = 1; i <= totalPages; i++) {
+                li = document.createElement('li');
+                li.classList.add('page-item');
+                if (i === currentPage) li.classList.add('active');
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                paginationElement.appendChild(li);
+            }
+            
+            li = document.createElement('li');
+            li.classList.add('page-item');
+            if (currentPage === totalPages) li.classList.add('disabled');
+            li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>`;
+            paginationElement.appendChild(li);
+        }
+        
+        function changePage(page) {
+            if (page < 1 || page > Math.ceil(allLogs.length / logsPerPage)) return;
+            currentPage = page;
+            displayLogs(allLogs);
+            updatePagination();
+        }
+        
+        function filterLogs() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const predictionFilter = document.getElementById('predictionFilter').value;
+            
+            const filteredLogs = allLogs.filter(log => {
+                if (predictionFilter !== 'all' && log.status !== predictionFilter) {
+                    return false;
+                }
+                
+                if (searchTerm) {
+                    return log.source_ip.toLowerCase().includes(searchTerm) ||
+                        log.destination_ip.toLowerCase().includes(searchTerm) ||
+                        log.protocol.toLowerCase().includes(searchTerm) ||
+                        log.status.toLowerCase().includes(searchTerm);
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            displayLogs(filteredLogs);
+            updatePagination();
+            document.getElementById('resultCount').textContent = `Showing ${filteredLogs.length} of ${allLogs.length} logs`;
+        }
+        
+        function showLogDetails(index) {
+            const log = allLogs[index];
+            const detailContent = document.getElementById('logDetailContent');
+            
+            let predictionClass = 'bg-success';
+            let anomalyType = 'Normal Traffic';
+            
+            if (log.status === 'DoS') {
+                predictionClass = 'bg-danger';
+                anomalyType = 'Denial of Service Attack';
+            } else if (log.status === 'DDoS') {
+                predictionClass = 'bg-danger';
+                anomalyType = 'Distributed Denial of Service Attack';
+            } else if (log.status === 'PortScan') {
+                predictionClass = 'bg-warning';
+                anomalyType = 'Port Scanning Activity';
+            } else if (log.status === 'Brute Force') {
+                predictionClass = 'bg-warning';
+                anomalyType = 'Brute Force Attack';
+            } else if (log.status === 'Bot') {
+                predictionClass = 'bg-info';
+                anomalyType = 'Bot/Automated Activity';
+            } else if (log.status === 'BENIGN') {
+                predictionClass = 'bg-success';
+                anomalyType = 'Benign Traffic';
+            }
+            
+            let content = `
+                <div class="card mb-3">
+                    <div class="card-header ${predictionClass} text-white">
+                        <h5>${log.status} - ${anomalyType}</h5>
+                        <small class="text-light">${new Date(log.timestamp).toLocaleString()}</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Connection Information</h6>
+                                <table class="table table-sm">
+                                    <tr><th>Time</th><td>${new Date(log.timestamp).toLocaleString()}</td></tr>
+                                    <tr><th>Destination</th><td>${log.destination_ip}</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Prediction</h6>
+                                <p class="mb-1"><strong>Type:</strong> ${log.status}</p>
+                                <p class="mb-1"><strong>Classification:</strong> ${anomalyType}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (log.headers) {
+                content += `<h6>Network Flow Features</h6><div class="table-responsive"><table class="table table-sm table-striped">`;
+                
+                let colCount = 0;
+                content += '<tr>';
+                
+                for (const [key, value] of Object.entries(log.headers)) {
+                    if (key === 'src_ip' || key === 'dst_ip' || key === 'protocol') {
+                        continue;
+                    }
+                    
+                    if (colCount % 2 === 0 && colCount > 0) {
+                        content += '</tr><tr>';
+                    }
+                    
+                    content += `<th>${key}</th><td>${value}</td>`;
+                    colCount++;
+                }
+                
+                if (colCount % 2 !== 0) {
+                    content += '<td colspan="2"></td>';
+                }
+                content += '</tr>';
+                
+                content += `</table></div>`;
+            }
+            
+            detailContent.innerHTML = content;
+            logModal.show();
+        }
+        
+        function refreshLogs() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('predictionFilter').selectedIndex = 0;
+            loadLogs();
+        }
+
+        function logout() {
+            localStorage.removeItem('api_key');
+            window.location.href = '/logout';
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Network Anomaly Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .bg-dark-custom {
+            background-color: #0d1117;
+        }
+        .accordion-button {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #252525;
+            color: #5c94ff;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(92, 148, 255, 0.25);
+        }
+        .accordion-item {
+            background-color: #1e1e1e;
+            border-color: #333;
+        }
+        .accordion-body {
+            color: #ffffff !important;
+        }
+        .accordion-body p, .accordion-body li, .accordion-body h6 {
+            color: #ffffff !important;
+        }
+        .accordion-body .text-muted {
+            color: #b8b8b8 !important;
+        }
+        
+        .list-group-item {
+            background-color: #252525;
+            color: #e0e0e0;
+            border-color: #333;
+        }
+        .list-group-item:hover {
+            background-color: #2d2d2d;
+        }
+        .modal-content {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            border-color: #333;
+        }
+        .modal-header {
+            border-bottom-color: #333;
+        }
+        .modal-footer {
+            border-top-color: #333;
+        }
+        code {
+            color: #5c94ff;
+            background-color: #1a1a2e;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .bg-dark {
+            background-color: #0d0d0d!important;
+        }
+        
+        .card {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border: 1px solid #333 !important;
+        }
+        .card-body {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+        }
+        .card-title, .card-text {
+            color: #e0e0e0 !important;
+        }
+        .card-footer {
+            background-color: #1a1a2e !important;
+            border-top: 1px solid #333 !important;
+        }
+        
+        .btn-outline-primary {
+            color: #5c94ff;
+            border-color: #5c94ff;
+        }
+        .btn-outline-primary:hover {
+            background-color: #304b80;
+            color: #e0e0e0;
+            border-color: #5c94ff;
+        }
+        
+        .alert-info {
+            background-color: #1e364c !important;
+            border-color: #264b6a !important;
+            color: #ffffff !important;
+        }
+        .alert-success {
+            background-color: #1e3b2e !important;
+            border-color: #265338 !important;
+            color: #ffffff !important;
+        }
+        .alert-warning {
+            background-color: #3b331e !important;
+            border-color: #534926 !important;
+            color: #ffffff !important;
+        }
+        .alert-danger {
+            background-color: #3b1e1e !important;
+            border-color: #532626 !important;
+            color: #ffffff !important;
+        }
+        
+        p, h1, h2, h3, h4, h5, h6, li, div {
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark-custom">
+        <div class="container">
+            <a class="navbar-brand" href="/">Network Anomaly Detection</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/workspaces">
+                            <i class="fas fa-arrow-left"></i> Back to Workspaces
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logs?workspace_id={{ workspace.id }}">
+                            <i class="fas fa-list-alt"></i> View Logs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ workspace.name }} Dashboard</h1>
+            <div class="text-white">
+                <small>Created: {{ workspace.created_at.strftime('%Y-%m-%d') }}</small>
+            </div>
+        </div>
+        {% if workspace.description %}
+        <div class="alert alert-info">
+            {{ workspace.description }}
+        </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ workspace.name }} Dashboard</h2>
+                        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                        
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle"></i> Welcome to Your Network Monitoring Workspace</h5>
+                            <p class="mb-0">This workspace is ready for network anomaly detection. Download and run the monitor below to start analyzing your network traffic. View detected anomalies on the <a href="/logs?workspace_id={{ workspace.id }}" class="alert-link">logs page</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h2 class="card-title">Installation Guide</h2>
+                        <div class="alert alert-info">
+                            <h5>Quick Start Guide</h5>
+                            <p>Follow these simple steps to set up our Network Anomaly Detection system for monitoring your network traffic:</p>
+                        </div>
+
+                        <div class="accordion" id="installationAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                                        Step 1: Download Network Monitor
+                                    </button>
+                                </h2>
+                                <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#installationAccordion">
+                                    <div class="accordion-body">
+                                        <p>Download our network anomaly monitor:</p>
+                                        <div class="d-grid gap-2 d-md-flex justify-content-center">
+                                            <a href="/static/downloads/Network Anomaly Monitor.exe" class="btn btn-primary btn-lg" download>
+                                                <i class="fas fa-download"></i> Download Network Anomaly Monitor
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                                        Step 2: Run the Monitor
+                                    </button>
+                                </h2>
+                                <div id="step2" class="accordion-collapse collapse" data-bs-parent="#installationAccordion">
+                                    <div class="accordion-body">
+                                        <h6>Getting Started:</h6>
+                                        <ol>
+                                            <li>Save the downloaded executable to any folder of your choice</li>
+                                            <li>Double-click <code>Network Anomaly Monitor.exe</code> to start</li>
+                                            <li>Enter your login credentials when prompted:
+                                                <div class="bg-dark text-light p-3 mt-2 mb-2 rounded">
+                                                    <strong>Username:</strong> <span class="text-info">your_username</span><br>
+                                                    <strong>Password:</strong> <span class="text-muted">[your account password]</span>
+                                                </div>
+                                            </li>
+                                            <li>Configure your monitoring preferences:
+                                                <ul>
+                                                    <li><strong>Check interval:</strong> How often to scan for files (default: 10 seconds)</li>
+                                                    <li><strong>CSV directory:</strong> Where to monitor files (default: same as executable)</li>
+                                                </ul>
+                                            </li>
+                                        </ol>
+
+                                        <div class="alert alert-success mt-3">
+                                            <h6>🎉 That's it!</h6>
+                                            <p class="mb-0">The monitor will automatically:</p>
+                                            <ul class="mb-0">
+                                                <li>Create necessary directories (processed, failed, logs)</li>
+                                                <li>Start monitoring for CSV files</li>
+                                                <li>Process files automatically when detected</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                                        Step 3: Monitor Network Traffic
+                                    </button>
+                                </h2>
+                                <div id="step3" class="accordion-collapse collapse" data-bs-parent="#installationAccordion">
+                                    <div class="accordion-body">
+                                        <h6>Using the Network Monitor:</h6>
+                                        <ol>
+                                            <li>Export network traffic data in CSV format using <strong>CICFlowMeter</strong></li>
+                                            <li>Place the CSV files in your configured monitoring directory</li>
+                                            <li>The monitor will automatically detect and process new CSV files</li>
+                                            <li>View results in real-time on this dashboard or the <a href="/logs?workspace_id={{ workspace.id }}">logs page</a></li>
+                                        </ol>
+
+                                        <div class="alert alert-info mt-3">
+                                            <h6>📊 Network Traffic Capture Requirements</h6>
+                                            
+                                            <div class="alert alert-success mb-3">
+                                                <h6><strong>👥 For Most Users: Use CICFlowMeter</strong></h6>
+                                                <p class="mb-2">We <strong>strongly recommend CICFlowMeter</strong> for all users as it automatically generates the correct format:</p>
+                                                <ul class="mb-0">
+                                                    <li>Capture of live network traffic to websites</li>
+                                                    <li>Generation of detailed flow statistics in the required format</li>
+                                                    <li>Export of data in CSV format compatible with our analyzer</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <details>
+                                                <summary><strong>🔧 For Engineers: Alternative Tools</strong></summary>
+                                                <div class="mt-3">
+                                                    <p>If you are an engineer and prefer to use another network analysis tool, ensure your CSV files contain <strong>exactly these 78 features</strong> in the correct order:</p>
+                                                    <div class="bg-dark text-light p-3 rounded small" style="max-height: 200px; overflow-y: auto;">
+                                                        <code>Destination Port, Flow Duration, Total Fwd Packets, Total Backward Packets, Total Length of Fwd Packets, Total Length of Bwd Packets, Fwd Packet Length Max, Fwd Packet Length Min, Fwd Packet Length Mean, Fwd Packet Length Std, Bwd Packet Length Max, Bwd Packet Length Min, Bwd Packet Length Mean, Bwd Packet Length Std, Flow Bytes/s, Flow Packets/s, Flow IAT Mean, Flow IAT Std, Flow IAT Max, Flow IAT Min, Fwd IAT Total, Fwd IAT Mean, Fwd IAT Std, Fwd IAT Max, Fwd IAT Min, Bwd IAT Total, Bwd IAT Mean, Bwd IAT Std, Bwd IAT Max, Bwd IAT Min, Fwd PSH Flags, Bwd PSH Flags, Fwd URG Flags, Bwd URG Flags, Fwd Header Length, Bwd Header Length, Fwd Packets/s, Bwd Packets/s, Min Packet Length, Max Packet Length, Packet Length Mean, Packet Length Std, Packet Length Variance, FIN Flag Count, SYN Flag Count, RST Flag Count, PSH Flag Count, ACK Flag Count, URG Flag Count, CWE Flag Count, ECE Flag Count, Down/Up Ratio, Average Packet Size, Avg Fwd Segment Size, Avg Bwd Segment Size, Fwd Header Length.1, Fwd Avg Bytes/Bulk, Fwd Avg Packets/Bulk, Fwd Avg Bulk Rate, Bwd Avg Bytes/Bulk, Bwd Avg Packets/Bulk, Bwd Avg Bulk Rate, Subflow Fwd Packets, Subflow Fwd Bytes, Subflow Bwd Packets, Subflow Bwd Bytes, Init_Win_bytes_forward, Init_Win_bytes_backward, act_data_pkt_fwd, min_seg_size_forward, Active Mean, Active Std, Active Max, Active Min, Idle Mean, Idle Std, Idle Max, Idle Min</code>
+                                                    </div>
+                                                    
+                                                    <div class="alert alert-warning mt-2 mb-0">
+                                                        <small><strong>⚠️ Important:</strong> Missing features, incorrect feature names, or wrong column order will cause processing to fail. CICFlowMeter is recommended to avoid compatibility issues.</small>
+                                                    </div>
+                                                </div>
+                                            </details>
+                                        </div>
+
+                                        <div class="alert alert-warning mt-3">
+                                            <h6>💡 Pro Tips:</h6>
+                                            <ul class="mb-0">
+                                                <li>The monitor runs continuously - just leave it running in the background</li>
+                                                <li>Check <code>logs/monitor.log</code> for detailed processing information</li>
+                                                <li>Use <code>--reset-session</code> command line option to change settings</li>
+                                                <li>Files are automatically organized into processed/failed directories</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step4">
+                                        Troubleshooting & Advanced Options
+                                    </button>
+                                </h2>
+                                <div id="step4" class="accordion-collapse collapse" data-bs-parent="#installationAccordion">
+                                    <div class="accordion-body">
+                                        <h6>Common Issues:</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-warning">Authentication Problems:</h6>
+                                                <ul>
+                                                    <li>Verify your username and password</li>
+    
+                                                    <li>Check your network connection</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-warning">File Processing Issues:</h6>
+                                                <ul>
+                                                    <li>Ensure CSV files are from CICFlowMeter</li>
+                                                    <li>Check <code>logs/monitor.log</code> for errors</li>
+                                                    <li>Verify file permissions and disk space</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="mt-3">Command Line Options:</h6>
+                                        <div class="bg-dark text-light p-3 rounded">
+                                            <code>Network Anomaly Monitor.exe --reset-session<br><br>
+                                            Network Anomaly Monitor.exe --interval 30<br><br>
+                                            Network Anomaly Monitor.exe --csv-dir "C:\custom\path"</code>
+                                        </div>
+
+                                        <div class="alert alert-info mt-3">
+                                            <h6>Need Help?</h6>
+                                            <p class="mb-0">If you encounter any issues:</p>
+                                            <ul class="mb-0">
+                                                <li>Check the <code>logs/monitor.log</code> file for detailed error messages</li>
+                                                <li>Use the <code>--reset-session</code> option to start fresh</li>
+
+                                                <li>Verify your account credentials are correct</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionElements = document.querySelectorAll('.accordion-collapse');
+            accordionElements.forEach(element => {
+                element.addEventListener('show.bs.collapse', function() {
+                    console.log(`Accordion section ${this.id} is expanding`);
+                });
+                element.addEventListener('shown.bs.collapse', function() {
+                    console.log(`Accordion section ${this.id} has expanded`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
