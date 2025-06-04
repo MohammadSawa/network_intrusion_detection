@@ -31,7 +31,7 @@ pip install -r requirements.txt
 ### 2. Start the API Server
 ```bash
 # Start the server (make sure venv is activated)
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 ### 3. Create an Account
